@@ -1,8 +1,12 @@
 import { createClient } from '@/utils/supabase/server'
+import AddToCartButton from '@/components/AddToCartButton'
 
-export default async function Home() {
+export default async function ProductsPage() {
   const supabase = await createClient()
-  const { data: products, error } = await supabase.from('products').select()
+  const { data: products, error } = await supabase
+    .from('products')
+    .select()
+    .order('created_at', { ascending: false })
 
   if (error) {
     return <p className="p-8 text-red-700">Error: {error.message}</p>
@@ -10,15 +14,8 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen bg-stone-50">
-      <header className="bg-green-900 text-amber-50 px-6 py-10 text-center">
-        <h1 className="text-4xl font-bold tracking-wide">Dawa Harda</h1>
-        <p className="mt-2 text-green-100">
-          Pure, natural herbal remedies — made the traditional way
-        </p>
-      </header>
-
       <section className="max-w-5xl mx-auto px-6 py-10">
-        <h2 className="text-2xl font-semibold text-green-900 mb-6">Our Products</h2>
+        <h1 className="text-2xl font-semibold text-green-900 mb-6">Our Products</h1>
 
         {products.length === 0 ? (
           <p className="text-stone-500">No products yet.</p>
@@ -53,6 +50,8 @@ export default async function Home() {
                       Wholesale available for {product.wholesale_min_qty}+ units
                     </p>
                   )}
+
+                  <AddToCartButton product={product} />
                 </div>
               </div>
             ))}

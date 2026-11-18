@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import CartLink from '@/components/CartLink'
 
 export default function Navbar() {
   return (
@@ -12,6 +13,7 @@ export default function Navbar() {
         <Link href="/products" className="hover:text-green-200 transition-colors">Products</Link>
         <Link href="/about" className="hover:text-green-200 transition-colors">About</Link>
         <Link href="/#testimonials" className="hover:text-green-200 transition-colors">Reviews</Link>
+        <CartLink />
       </div>
     </nav>
   )
