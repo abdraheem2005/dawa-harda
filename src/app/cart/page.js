@@ -13,6 +13,8 @@ export default function CartPage() {
   const [address, setAddress] = useState('')
   const [placing, setPlacing] = useState(false)
   const [error, setError] = useState('')
+  const [waLink, setWaLink] = useState('')
+  const [orderNo, setOrderNo] = useState(null)
 
   async function placeOrder(e) {
     e.preventDefault()
@@ -43,8 +45,33 @@ export default function CartPage() {
       `Name: ${name}\nPhone: ${phone}\nAddress: ${address}\n\n` +
       `Items:\n${lines}\n\n*Total: ₹${order.out_total}*`
 
+    const link = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`
+
+    setOrderNo(order.out_order_number)
+    setWaLink(link)
     clearCart()
-    window.location.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`
+
+    const isIOS =
+      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+    if (!isIOS) window.location.href = link
+  }
+
+  if (waLink) {
+    return (
+      <main className="max-w-3xl mx-auto px-6 py-16 text-center">
+        <h1 className="text-2xl font-bold text-green-900 mb-3">Order #{orderNo} placed ✓</h1>
+        <p className="text-stone-600 mb-6">
+          Tap the button below to send your order details to us on WhatsApp.
+        </p>
+        <a
+          href={waLink}
+          className="inline-block bg-green-700 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-600"
+        >
+          Open WhatsApp
+        </a>
+      </main>
+    )
   }
 
   if (!loaded) {
