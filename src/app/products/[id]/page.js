@@ -5,6 +5,7 @@ import ProductGallery from '@/components/ProductGallery'
 import AddToCartButton from '@/components/AddToCartButton'
 import Stars from '@/components/Stars'
 import ReviewForm from '@/components/ReviewForm'
+import WholesaleEnquiry from '@/components/WholesaleEnquiry'
 import { RATING_LABELS } from '@/utils/ratings'
 
 function formatDate(ts) {
@@ -72,13 +73,15 @@ export default async function ProductPage({ params }) {
               </p>
             )}
 
-            {product.wholesale_enabled && (
-              <p className="mt-4 text-sm text-amber-700">
-                Wholesale available for {product.wholesale_min_qty}+ units
-              </p>
-            )}
-
             <AddToCartButton product={product} />
+
+            {product.wholesale_enabled && (
+              <WholesaleEnquiry
+                productId={product.id}
+                productName={product.name}
+                minQty={product.wholesale_min_qty}
+              />
+            )}
           </div>
         </div>
 
