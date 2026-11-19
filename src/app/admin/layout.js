@@ -8,6 +8,8 @@ export default function AdminLayout({ children }) {
         <div className="flex items-center gap-5 text-sm font-medium text-green-900">
           <Link href="/admin" className="hover:underline">← Dashboard</Link>
           <Link href="/admin/products" className="hover:underline">Products</Link>
+          <Link href="/admin/orders" className="hover:underline">Orders</Link>
+          <Link href="/admin/reviews" className="hover:underline">Reviews</Link>
         </div>
         <LogoutButton />
       </div>

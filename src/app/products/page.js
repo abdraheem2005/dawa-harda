@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
 import AddToCartButton from '@/components/AddToCartButton'
 
@@ -26,22 +27,30 @@ export default async function ProductsPage() {
                 key={product.id}
                 className="bg-white rounded-2xl shadow-sm border border-green-100 overflow-hidden hover:shadow-md transition-shadow"
               >
-                <div className="h-40 bg-green-50 flex items-center justify-center text-4xl">
-                  {product.image_url ? (
-                    <img
-                      src={product.image_url}
-                      alt={product.name}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <span>🌿</span>
-                  )}
-                </div>
+                <Link href={`/products/${product.id}`}>
+                  <div className="h-40 bg-green-50 flex items-center justify-center text-4xl">
+                    {product.image_url ? (
+                      <img
+                        src={product.image_url}
+                        alt={product.name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span>🌿</span>
+                    )}
+                  </div>
+                </Link>
 
                 <div className="p-4">
-                  <h3 className="text-lg font-semibold text-green-900">{product.name}</h3>
+                  <Link href={`/products/${product.id}`}>
+                    <h3 className="text-lg font-semibold text-green-900 hover:underline">
+                      {product.name}
+                    </h3>
+                  </Link>
                   {product.description && (
-                    <p className="text-sm text-stone-600 mt-1">{product.description}</p>
+                    <p className="text-sm text-stone-600 mt-1 line-clamp-2">
+                      {product.description}
+                    </p>
                   )}
                   <p className="mt-3 text-xl font-bold text-green-800">₹{product.retail_price}</p>
 
