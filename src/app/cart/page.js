@@ -6,24 +6,83 @@ import { useCart } from '@/components/CartProvider'
 import { createClient } from '@/utils/supabase/client'
 import { WHATSAPP_NUMBER } from '@/utils/config'
 
+const STATES = [
+  'Kerala','Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa',
+  'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
+  'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland',
+  'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura',
+  'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+  'Andaman and Nicobar Islands', 'Chandigarh', 'Dadra and Nagar Haveli and Daman and Diu',
+  'Delhi', 'Jammu and Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry',
+]
+
+function cleanPhone(raw) {
+  let d = raw.replace(/\D/g, '')
+  if (d.length === 12 && d.startsWith('91')) d = d.slice(2)
+  if (d.length === 11 && d.startsWith('0')) d = d.slice(1)
+  return d
+}
+
+const inputClass = (err) =>
+  `w-full px-4 py-2 border rounded-lg ${err ? 'border-red-500' : 'border-stone-300'}`
+
+function FieldError({ msg }) {
+  return msg ? <p className="text-red-700 text-xs mt-1">{msg}</p> : null
+}
+
 export default function CartPage() {
   const { items, loaded, total, setQty, removeItem, clearCart } = useCart()
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
-  const [address, setAddress] = useState('')
+  const [line, setLine] = useState('')
+  const [city, setCity] = useState('')
+  const [state, setState] = useState('')
+  const [pin, setPin] = useState('')
+  const [errors, setErrors] = useState({})
   const [placing, setPlacing] = useState(false)
   const [error, setError] = useState('')
   const [waLink, setWaLink] = useState('')
   const [orderNo, setOrderNo] = useState(null)
 
-  async function placeOrder(e) {
-    e.preventDefault()
-    setPlacing(true)
+  function validate() {
+    const e = {}
+    if (!/^[\p{L}][\p{L}\p{M}\s.'-]{1,59}$/u.test(name.trim())) {
+      e.name = 'Enter your full name (letters only, 2 to 60 characters)'
+    }
+    if (!/^[6-9]\d{9}$/.test(phone)) {
+      e.phone = 'Enter a valid 10-digit mobile number'
+    }
+    if (line.trim().length < 10) {
+      e.line = 'Enter house/flat number, street and area (at least 10 characters)'
+    }
+    if (!/^[\p{L}\p{M}\s.'-]{2,40}$/u.test(city.trim())) {
+      e.city = 'Enter your city or town'
+    }
+    if (!state) {
+      e.state = 'Select your state'
+    }
+    if (!/^[1-9]\d{5}$/.test(pin)) {
+      e.pin = 'Enter a valid 6-digit PIN code'
+    }
+    return e
+  }
+
+  async function placeOrder(ev) {
+    ev.preventDefault()
     setError('')
+
+    const found = validate()
+    setErrors(found)
+    if (Object.keys(found).length > 0) return
+
+    setPlacing(true)
+
+    const cleanName = name.trim().replace(/\s+/g, ' ')
+    const address = `${line.trim()}, ${city.trim()}, ${state} - ${pin}`
 
     const supabase = createClient()
     const { data, error } = await supabase.rpc('place_order', {
-      p_name: name,
+      p_name: cleanName,
       p_phone: phone,
       p_address: address,
       p_items: items.map((i) => ({ product_id: i.id, qty: i.qty })),
@@ -42,7 +101,7 @@ export default function CartPage() {
 
     const message =
       `*New Order #${order.out_order_number}*\n\n` +
-      `Name: ${name}\nPhone: ${phone}\nAddress: ${address}\n\n` +
+      `Name: ${cleanName}\nPhone: ${phone}\nAddress: ${address}\n\n` +
       `Items:\n${lines}\n\n*Total: ₹${order.out_total}*`
 
     const link = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`
@@ -142,34 +201,93 @@ export default function CartPage() {
 
       <form
         onSubmit={placeOrder}
+        noValidate
         className="mt-8 bg-white border border-green-100 rounded-2xl p-6 space-y-4"
       >
         <h2 className="text-lg font-semibold text-green-900">Delivery details</h2>
 
-        <input
-          placeholder="Your name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-          className="w-full px-4 py-2 border border-stone-300 rounded-lg"
-        />
-        <input
-          type="tel"
-          placeholder="Phone number"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          required
-          minLength={10}
-          className="w-full px-4 py-2 border border-stone-300 rounded-lg"
-        />
-        <textarea
-          placeholder="Full delivery address"
-          rows={3}
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-          required
-          className="w-full px-4 py-2 border border-stone-300 rounded-lg"
-        />
+        <div>
+          <input
+            placeholder="Full name"
+            autoComplete="name"
+            maxLength={60}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className={inputClass(errors.name)}
+          />
+          <FieldError msg={errors.name} />
+        </div>
+
+        <div>
+          <div className="flex gap-2">
+            <span className="px-3 py-2 border border-stone-300 rounded-lg bg-stone-100 text-stone-700">
+              +91
+            </span>
+            <input
+              type="tel"
+              inputMode="numeric"
+              placeholder="10-digit mobile number"
+              autoComplete="tel-national"
+              value={phone}
+              onChange={(e) => setPhone(cleanPhone(e.target.value).slice(0, 10))}
+              className={inputClass(errors.phone)}
+            />
+          </div>
+          <FieldError msg={errors.phone} />
+        </div>
+
+        <div>
+          <textarea
+            placeholder="House / flat no., street, area, landmark"
+            autoComplete="street-address"
+            rows={3}
+            maxLength={200}
+            value={line}
+            onChange={(e) => setLine(e.target.value)}
+            className={inputClass(errors.line)}
+          />
+          <FieldError msg={errors.line} />
+        </div>
+
+        <div>
+          <input
+            placeholder="City / Town"
+            autoComplete="address-level2"
+            maxLength={40}
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            className={inputClass(errors.city)}
+          />
+          <FieldError msg={errors.city} />
+        </div>
+
+        <div>
+          <select
+            value={state}
+            onChange={(e) => setState(e.target.value)}
+            className={inputClass(errors.state)}
+          >
+            <option value="">Select state</option>
+            {STATES.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+          <FieldError msg={errors.state} />
+        </div>
+
+        <div>
+          <input
+            inputMode="numeric"
+            placeholder="PIN code (6 digits)"
+            autoComplete="postal-code"
+            value={pin}
+            onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+            className={inputClass(errors.pin)}
+          />
+          <FieldError msg={errors.pin} />
+        </div>
 
         {error && <p className="text-red-700 text-sm">{error}</p>}
 
